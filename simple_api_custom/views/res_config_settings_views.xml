@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <app data-string="Boletas Honorarios" string="Boletas Honorarios" name="boleta_honorarios_settings">
+                <app data-string="Boletas Honorarios" string="Boletas Honorarios" name="simple_api_custom">
                     <block title="Configuración SimpleAPI">
                         <setting help="Configurar conexión con SimpleAPI Chile">
                             <div class="content-group">
