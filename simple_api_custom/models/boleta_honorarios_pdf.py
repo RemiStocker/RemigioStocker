@@ -11,10 +11,10 @@ _logger = logging.getLogger(__name__)
 class BoletaHonorariosPdf(models.Model):
     _inherit = 'boleta.honorarios'
 
+    # Reemplaza la función completa con esta versión
     def action_get_sii_pdf(self):
         self.ensure_one()
 
-        # Validaciones Previas
         if self.state not in ('emitted', 'downloaded'):
             raise UserError(_("Solo se puede descargar el PDF de boletas ya emitidas."))
         if not self.numero_boleta:
@@ -30,26 +30,23 @@ class BoletaHonorariosPdf(models.Model):
         
         url = f"{config['base_url']}/bhe/pdf/emitidas/{folio}/{anio}"
         
-        # --- CAMBIO IMPORTANTE AQUÍ ---
-        # Definimos las cabeceras (headers) indicando el Content-Type correcto
+        # --- AJUSTE FINAL ---
         headers = {
             'Authorization': config['api_key'],
             'Accept': 'application/pdf',
-            'Content-Type': 'text/plain', # <-- El cambio clave
+            'Content-Type': 'application/json', # Usamos el Content-Type estándar para JSON
         }
         
-        payload_dict = {
+        payload = {
             "RutUsuario": self.rut_usuario.replace('.', '').replace('-', ''),
             "PasswordSII": self.password_sii,
         }
-        # Convertimos el diccionario a un string de texto JSON
-        payload_str = json.dumps(payload_dict)
-        # -----------------------------
+        # --------------------
 
         try:
-            _logger.info(f"Llamando a GET endpoint: {url}")
-            # Enviamos el string como 'data' en lugar de 'json' para controlar el Content-Type
-            response = requests.get(url, data=payload_str, headers=headers, timeout=config['timeout'])
+            _logger.info(f"Llamando a endpoint (usando POST): {url}")
+            # Usamos POST que es el método estándar para enviar un Body JSON.
+            response = requests.post(url, json=payload, headers=headers, timeout=config['timeout'])
             response.raise_for_status()
 
             if response.content:
