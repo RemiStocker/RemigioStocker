@@ -7,6 +7,7 @@
       <form string="Boleta de Honorarios">
         <header>
           <button name="action_emitir_boleta" string="Emitir Boleta" type="object" class="btn-primary"/>
+          <button name="action_get_sii_pdf" string="Descargar PDF desde SII" type="object" class="btn-secondary" attrs="{'invisible':   [('state', 'not in', ['emitted', 'downloaded'])]}"/>
           <!-- Botón legacy opcional -->
           <button name="action_anular_boleta" string="Anular (legacy)" type="object" class="btn-secondary"
                   confirm="¿Está seguro de anular esta boleta (legacy)?"/>
