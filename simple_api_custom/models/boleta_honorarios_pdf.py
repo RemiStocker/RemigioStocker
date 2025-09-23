@@ -11,7 +11,6 @@ _logger = logging.getLogger(__name__)
 class BoletaHonorariosPdf(models.Model):
     _inherit = 'boleta.honorarios'
 
-    # Reemplaza la función completa con esta versión
     def action_get_sii_pdf(self):
         self.ensure_one()
 
@@ -33,7 +32,6 @@ class BoletaHonorariosPdf(models.Model):
         headers = {
             'Authorization': config['api_key'],
             'Accept': 'application/pdf',
-            'Content-Type': 'application/json',
         }
         
         payload = {
@@ -42,8 +40,9 @@ class BoletaHonorariosPdf(models.Model):
         }
 
         try:
-            _logger.info(f"Llamando a endpoint (usando POST): {url}")
-            response = requests.post(url, json=payload, headers=headers, timeout=config['timeout'])
+            _logger.info(f"Llamando a GET endpoint: {url}")
+            # VOLVEMOS A USAR GET, que es lo que funcionó en Postman
+            response = requests.get(url, json=payload, headers=headers, timeout=config['timeout'])
             response.raise_for_status()
 
             if response.content:
@@ -55,14 +54,11 @@ class BoletaHonorariosPdf(models.Model):
                 })
                 self.message_post(body="El PDF de la boleta se ha descargado exitosamente desde el SII.")
                 
-                # --- CAMBIO IMPORTANTE AQUÍ ---
-                # Retornamos una acción para que el navegador descargue el archivo.
                 return {
                     'type': 'ir.actions.act_url',
                     'url': f'/boleta_honorarios/download/{self.id}',
                     'target': 'self',
                 }
-                # -----------------------------
 
             else:
                 self.message_post(body="La API no devolvió contenido para el PDF, pero la conexión fue exitosa.")
@@ -75,5 +71,4 @@ class BoletaHonorariosPdf(models.Model):
             _logger.error(f"Error inesperado al descargar PDF: {e}")
             raise UserError(_(f"Ocurrió un error inesperado: {e}"))
         
-        # Si algo falla o no hay contenido, simplemente refresca la vista.
         return True
