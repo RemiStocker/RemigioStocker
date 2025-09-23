@@ -30,22 +30,19 @@ class BoletaHonorariosPdf(models.Model):
         
         url = f"{config['base_url']}/bhe/pdf/emitidas/{folio}/{anio}"
         
-        # --- AJUSTE FINAL ---
         headers = {
             'Authorization': config['api_key'],
             'Accept': 'application/pdf',
-            'Content-Type': 'application/json', # Usamos el Content-Type estándar para JSON
+            'Content-Type': 'application/json',
         }
         
         payload = {
             "RutUsuario": self.rut_usuario.replace('.', '').replace('-', ''),
             "PasswordSII": self.password_sii,
         }
-        # --------------------
 
         try:
             _logger.info(f"Llamando a endpoint (usando POST): {url}")
-            # Usamos POST que es el método estándar para enviar un Body JSON.
             response = requests.post(url, json=payload, headers=headers, timeout=config['timeout'])
             response.raise_for_status()
 
@@ -57,6 +54,16 @@ class BoletaHonorariosPdf(models.Model):
                     'state': 'downloaded',
                 })
                 self.message_post(body="El PDF de la boleta se ha descargado exitosamente desde el SII.")
+                
+                # --- CAMBIO IMPORTANTE AQUÍ ---
+                # Retornamos una acción para que el navegador descargue el archivo.
+                return {
+                    'type': 'ir.actions.act_url',
+                    'url': f'/boleta_honorarios/download/{self.id}',
+                    'target': 'self',
+                }
+                # -----------------------------
+
             else:
                 self.message_post(body="La API no devolvió contenido para el PDF, pero la conexión fue exitosa.")
 
@@ -67,3 +74,6 @@ class BoletaHonorariosPdf(models.Model):
         except Exception as e:
             _logger.error(f"Error inesperado al descargar PDF: {e}")
             raise UserError(_(f"Ocurrió un error inesperado: {e}"))
+        
+        # Si algo falla o no hay contenido, simplemente refresca la vista.
+        return True
