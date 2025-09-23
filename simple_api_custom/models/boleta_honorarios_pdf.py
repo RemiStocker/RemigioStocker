@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
+# Asegúrate de que estas líneas estén al principio de tu archivo .py
 import base64
 import requests
 import logging
+import json # <-- AÑADE ESTA LÍNEA SI NO ESTÁ
 from odoo import models, api, _
 from odoo.exceptions import UserError
 
@@ -13,7 +14,7 @@ class BoletaHonorariosPdf(models.Model):
     def action_get_sii_pdf(self):
         self.ensure_one()
 
-        # --- Validaciones Previas ---
+        # Validaciones Previas
         if self.state not in ('emitted', 'downloaded'):
             raise UserError(_("Solo se puede descargar el PDF de boletas ya emitidas."))
         if not self.numero_boleta:
@@ -23,27 +24,34 @@ class BoletaHonorariosPdf(models.Model):
 
         _logger.info(f"Iniciando descarga de PDF para boleta folio {self.numero_boleta}")
 
-        # --- Preparar y Ejecutar la Llamada a la API ---
         config = self.get_simpleapi_config()
         folio = self.numero_boleta
         anio = self.fecha_emision.year
         
         url = f"{config['base_url']}/bhe/pdf/emitidas/{folio}/{anio}"
+        
+        # --- CAMBIO IMPORTANTE AQUÍ ---
+        # Definimos las cabeceras (headers) indicando el Content-Type correcto
         headers = {
             'Authorization': config['api_key'],
             'Accept': 'application/pdf',
+            'Content-Type': 'text/plain', # <-- El cambio clave
         }
-        payload = {
+        
+        payload_dict = {
             "RutUsuario": self.rut_usuario.replace('.', '').replace('-', ''),
             "PasswordSII": self.password_sii,
         }
+        # Convertimos el diccionario a un string de texto JSON
+        payload_str = json.dumps(payload_dict)
+        # -----------------------------
 
         try:
             _logger.info(f"Llamando a GET endpoint: {url}")
-            response = requests.get(url, json=payload, headers=headers, timeout=config['timeout'])
+            # Enviamos el string como 'data' en lugar de 'json' para controlar el Content-Type
+            response = requests.get(url, data=payload_str, headers=headers, timeout=config['timeout'])
             response.raise_for_status()
 
-            # --- Procesar la Respuesta (el archivo PDF) ---
             if response.content:
                 pdf_en_base64 = base64.b64encode(response.content)
                 self.write({
