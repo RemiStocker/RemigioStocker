@@ -183,6 +183,11 @@ class BoletaHonorarios(models.Model):
                 'Authorization': config['api_key']
             }
             url = f"{config['base_url']}/bhe/emitir"
+            
+            # --- AÑADE ESTA LÍNEA AQUÍ ---
+            _logger.info(f"DEBUG: Enviando payload de emisión: {json.dumps(data, indent=2)}")
+            # -----------------------------
+        
             _logger.info(f"🚀 [BHE] POST emitir -> {url} key={_mask_key(headers['Authorization'])}")
             resp = requests.post(url, json=data, headers=headers, timeout=config['timeout'])
             _logger.info(f"[BHE] emitir status={resp.status_code} body={resp.text[:300]}")
