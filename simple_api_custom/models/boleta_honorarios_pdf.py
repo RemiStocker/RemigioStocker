@@ -1,19 +1,22 @@
-# Asegúrate de que estas líneas estén al principio de tu archivo .py
 import base64
 import requests
 import logging
-import json # <-- AÑADE ESTA LÍNEA SI NO ESTÁ
+import json
 from odoo import models, api, _
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
+# --- Definición de la Clase ---
+# Creamos una nueva clase que "extiende" la funcionalidad del modelo de boletas.
 class BoletaHonorariosPdf(models.Model):
     _inherit = 'boleta.honorarios'
 
+    # --- Definición del Método Principal ---
     def action_get_sii_pdf(self):
         self.ensure_one()
-
+        
+        # --- Validaciones Previas
         if self.state not in ('emitted', 'downloaded'):
             raise UserError(_("Solo se puede descargar el PDF de boletas ya emitidas."))
         if not self.numero_boleta:
@@ -23,25 +26,31 @@ class BoletaHonorariosPdf(models.Model):
 
         _logger.info(f"Iniciando descarga de PDF para boleta folio {self.numero_boleta}")
 
+        # --- Preparación de la Llamada a la API ---
+
+        # Reutilizamos una función del modelo original para obtener la configuración (API Key, URL base)
         config = self.get_simpleapi_config()
         folio = self.numero_boleta
         anio = self.fecha_emision.year
         
+        # Construimos la URL completa del endpoint, insertando el folio y el año.
         url = f"{config['base_url']}/bhe/pdf/emitidas/{folio}/{anio}"
-        
+
+        # Preparamos las cabeceras/headers de la petición HTTP.
         headers = {
             'Authorization': config['api_key'],
-            'Accept': 'application/pdf',
+            'Accept': 'application/pdf', # Le decimos al servidor que esperamos recibir un PDF.
         }
         
+        # Preparamos el "cuerpo" (payload) de la petición con las credenciales del SII.
         payload = {
             "RutUsuario": self.rut_usuario.replace('.', '').replace('-', ''),
             "PasswordSII": self.password_sii,
         }
 
+        # --- Ejecución y Manejo de la Respuesta ---
         try:
             _logger.info(f"Llamando a GET endpoint: {url}")
-            # VOLVEMOS A USAR GET, que es lo que funcionó en Postman
             response = requests.get(url, json=payload, headers=headers, timeout=config['timeout'])
             response.raise_for_status()
 
@@ -63,6 +72,7 @@ class BoletaHonorariosPdf(models.Model):
             else:
                 self.message_post(body="La API no devolvió contenido para el PDF, pero la conexión fue exitosa.")
 
+        # --- Manejo de Errores Específicos ---
         except requests.exceptions.HTTPError as e:
             error_body = e.response.text
             _logger.error(f"Error HTTP al descargar PDF: {error_body}")

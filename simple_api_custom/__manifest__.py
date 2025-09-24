@@ -33,4 +33,5 @@
     'installable': True,
     'auto_install': False,
     'application': True,
+    'icon': '/simple_api_custom/static/description/icon.png',
 }
