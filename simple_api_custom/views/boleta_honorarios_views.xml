@@ -114,7 +114,14 @@
     <field name="view_mode">list,form</field>
   </record>
 
-  <menuitem id="menu_boleta_honorarios_root" name="Boletas Honorarios" sequence="50"/>
-  <menuitem id="menu_boleta_honorarios" name="Boletas de Honorarios"
-            parent="menu_boleta_honorarios_root" action="action_boleta_honorarios" sequence="10"/>
+  <menuitem id="menu_boleta_honorarios_root"
+              name="Boletas Honorarios"
+              sequence="50"
+              action="action_boleta_honorarios"/>
+
+  <menuitem id="menu_boleta_honorarios_listado"
+              name="Listado de Boletas"
+              parent="menu_boleta_honorarios_root"
+              action="action_boleta_honorarios"
+              sequence="10"/>
 </odoo>
