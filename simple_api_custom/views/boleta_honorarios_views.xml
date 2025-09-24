@@ -117,7 +117,8 @@
   <menuitem id="menu_boleta_honorarios_root"
               name="Boletas Honorarios"
               sequence="50"
-              action="action_boleta_honorarios"/>
+              action="action_boleta_honorarios"
+              web_icon="simple_api_custom,static/description/icon.png"/>
 
   <menuitem id="menu_boleta_honorarios_listado"
               name="Listado de Boletas"
